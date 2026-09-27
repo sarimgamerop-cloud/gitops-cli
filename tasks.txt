@@ -1,0 +1,7 @@
+help                [done]
+list repo           [done]
+create repo         [done]
+delete repo         [done]
+clone repo          [done]
+list contents       [done]
+display username    [done]

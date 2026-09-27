@@ -18,7 +18,7 @@ username = user.login
 
 def user_dec(x):
     while True:
-        print(x,"(y/n)")
+        print(x,"(y/n) : ",end="")
         status = input().lower().strip()
 
         if status in ('yes','y'):
@@ -28,18 +28,15 @@ def user_dec(x):
         else:
             print("Enter a valid value (y/n).")
 
-
 def help():
     # helpful help() command.
     print('''----- Available Options -----
-             help: displays this help,
-             fetch: fetches all repos,
-             create_repo: creates a repository,
-             delete_repo: deletes a repository,
-             clone_repo: clones a repository,
-             list_contents: lists the contents of a repository,
-             create_file: creates a file in a repository,
-             whoami: displays your username''')
+help: displays this help,
+fetch: fetches all repos,
+create_repo: creates a repository,
+delete_repo: deletes a repository,
+clone_repo: clones a repository,
+list_contents: lists the contents of a repository''')
 
 def repo_fetch():
     # fetches all the repositories and list them:
@@ -47,27 +44,23 @@ def repo_fetch():
         print(Fore.GREEN + f"• {repo.full_name}" + Style.RESET_ALL)
 
 def create_repository(name):
-    # fetches the users name from the auth token (PAT KEY)
-    user = g.get_user()
-    
     # Creates a repo and add <repo> as its object:
     repo = user.create_repo(
     name=name,
-    private = user_dec("Is the repo private: "),
+    private = user_dec("Is the repo private"),
     description=input("Enter description: "),
-    auto_init=user_dec("Do want to create a inital commit/README: ")
+    auto_init=user_dec("Do want to create a inital commit/README")
     )
     print(f"Created: {repo.full_name}") # Done...
 
 def delete_repository(name):
     try:
-        username = g.get_user().login
         repo = g.get_repo(f"{username}/{name}")
-        
-        if user_dec(f"Permanently delete {name}."):
+
+        if user_dec(f"Permanently delete {name}"):
             repo.delete()
             print(f"Permanently deleted: {name}")
-            
+
     except UnknownObjectException:
         print(f"Repo with the name {name} does not exist.")
 
@@ -78,39 +71,41 @@ def clone_repo(name_repo):
         pass
     else:
         print(Fore.RED + 'enter a valid directory!' + Style.RESET_ALL )
-        
+
     print(Fore.YELLOW + 'Cloning to the Repository ...' + Style.RESET_ALL )
-    
+
     subprocess.run(['git',
         'clone',
         repo_link,
         output_directory]
     )
     print(Fore.YELLOW + f"Cloned to '{output_directory}'.")
-    
 
 def list_contents(name):
-    strip_name = name.strip()
     usrnme = g.get_user().login
     try:
-        repo = g.get_repo(f"{usrnme}/{strip_name}")
+        repo = g.get_repo(f"{usrnme}/{name}")
     except UnknownObjectException:
-        print(f"Repo with the name {strip_name} does not exist.")
+        print(f"Repo with the name {name} does not exist.")
     else:
-        print(Fore.YELLOW + f"┌── {strip_name}/")
         for files in repo.get_contents(""):
             # it wont be that simple...
-            print(Fore.YELLOW + "├── " + Style.RESET_ALL + f"{files.name}") # files.name just works....
-    print(Fore.YELLOW + "└──────/" + Style.RESET_ALL)
+            print(files.name) # files.name just works....
 
-    
 def create_file(name):
     repo = g.get_repo(f"{username}/{name}")
     repo.create_file(input('Enter file name: '),input("Enter commit message: "),"")
 
+def delete_file(name):
+    repo = g.get_repo(f"{username}/{name}")
+    file_name = input("Enter file name to delete: ")
+    contents = repo.get_contents(file_name)
+    if user_dec(f"Delete file '{file_name}' from {repo.full_name}"):
+        repo.delete_file(file_name, "", contents.sha)
+        print(f"Succesfully deleted '{file_name}'")
 def decide(cmd):
     # decide function: handles commands system.
- 
+
     ## 'fetch': dynamically fetches repositories
     if cmd == 'fetch':
         print(Fore.YELLOW + "Repositories-List:" + Style.RESET_ALL)
@@ -132,12 +127,15 @@ def decide(cmd):
     elif cmd == 'delete_repo':
         delete_repository(input("Enter repo name to delete: ").strip())
 
-    ## 'list_contents': lists all the contents of a repository    
+    ## 'list_contents': lists all the contents of a repository
     elif cmd == 'list_contents':
-        list_contents(input("Enter repository name to list: "))
+        list_contents(input("Enter repo name to list contents: ".strip()))
 
     elif cmd == 'create_file':
         create_file(input("Enter repo name: "))
+
+    elif cmd == 'delete_file':
+        delete_file(input("Enter repo name: "))
 
     ## 'clone_repo': clones a repository in local storage
     elif cmd == 'clone_repo':
@@ -147,11 +145,5 @@ def decide(cmd):
         print('command:'+ Fore.RED + ' null' + Style.RESET_ALL)
 
 while True: # Fun Fact: it's always true
-    commands = input(
-        Fore.WHITE + "[" +
-        Fore.YELLOW + g.get_user().login + "@git" +
-        Fore.WHITE + "]" +
-        Fore.GREEN + "~> " +
-        Style.RESET_ALL
-    ).strip()
+    commands = str(input(Fore.GREEN + "~> " + Style.RESET_ALL)).strip()
     decide(commands)

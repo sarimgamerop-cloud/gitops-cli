@@ -5,3 +5,6 @@ delete repo         [done]
 clone repo          [done]
 list contents       [done]
 display username    [done]
+create file         [done]
+delete file
+update file

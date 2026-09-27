@@ -103,6 +103,7 @@ def list_contents(name):
         repo = g.get_repo(f"{usrnme}/{strip_name}")
     except UnknownObjectException:
         print(f"Repo with the name {strip_name} does not exist.")
+        return
     else:
         print(Fore.YELLOW + f"┌── {strip_name}/")
         for files in repo.get_contents(""):
@@ -115,7 +116,7 @@ def create_file(name):
     file_name = input("Enter file name: ")
     commit_message = input("Enter commit message: ")
     repo.create_file(file_name, commit_message, "")
-
+    print(Fore.GREEN + "Succesfully " + Style.RESET_ALL + f"created '{file_name}'")
 
 def delete_file(name):
     repo = g.get_repo(f"{username}/{name}")
@@ -123,9 +124,28 @@ def delete_file(name):
     contents = repo.get_contents(file_name)
     if user_dec(f"Delete file '{file_name}' from {repo.full_name}"):
         repo.delete_file(file_name, "", contents.sha)
-        print(f"Succesfully deleted '{file_name}'")
+        print(Fore.GREEN + "Succesfully " + Style.RESET_ALL + f"deleted '{file_name}'")
 
+def link_gen(name):
+    name = name.strip()
+    try:
+        repo = g.get_repo(f"{username}/{name}")   
+    except UnknownObjectException:
+        print(f"Repo with the name {username} does not exist.")
+        return
+    else:
+        link = f"https://github.com/{username}/{name}"
+        print(f"\033]8;;{link}\033\\{name}\033]8;;\033\\") # works now
 
+def list_branches(name):
+    repo = g.get_repo(f"{username}/{name}") 
+    if repo.get_branches():
+        for branch in repo.get_branches():
+            print(Fore.YELLOW + "├── " + Style.RESET_ALL + f"{branch.name}")
+        print(Fore.YELLOW + "└──────/" + Style.RESET_ALL)
+    else:
+        print(f"{username}/{name} has no branches")
+        
 def decide(cmd):
     # decide function: handles commands system.
 
@@ -154,15 +174,24 @@ def decide(cmd):
     elif cmd == 'list_contents':
         list_contents(input("Enter repo name to list contents: ").strip())
 
+    ## 'create_file': creates a file in a repository
     elif cmd == 'create_file':
         create_file(input("Enter repo name: "))
 
+    ## 'delete_file': deletes a file in a repository
     elif cmd == 'delete_file':
         delete_file(input("Enter repo name: "))
 
     ## 'clone_repo': clones a repository in local storage
     elif cmd == 'clone_repo':
         clone_repo(input('Enter Repository name: '))
+
+    ## 'link': generates a link to view your repository
+    elif cmd == 'link':
+        link_gen(input('Repository Name: '))
+
+    elif cmd == 'branches_list':
+        list_branches(input('Repository Name: '))
 
     else:
         print('command:' + Fore.RED + ' null' + Style.RESET_ALL)

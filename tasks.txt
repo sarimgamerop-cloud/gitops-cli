@@ -6,5 +6,6 @@ clone repo          [done]
 list contents       [done]
 display username    [done]
 create file         [done]
-delete file
-update file
+delete file         [done]
+update file         [cancelled]
+list_branches       [done]
